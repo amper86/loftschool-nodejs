@@ -1,9 +1,11 @@
 // Копирует и сортирует файлы
-// node index [папка откуда копирем] [папка куда копируем]
+// node index [папка откуда копирем] [папка куда копируем] del
 // пути до папок относительно index.js
+// del - для удаления исходной папки
 
 const fs = require('fs');
 const path = require('path');
+var rimraf = require('rimraf');
 
 const filenames = process.argv.slice(2);
 const src = path.join(__dirname, filenames[0]);
@@ -20,7 +22,12 @@ fs.mkdir(to, { recursive: true }, err => {
   } else {
     // console.log('папка создана по пути ' + to);
     readDir(src);
-    console.log('Копирование и сортировка файлов завершена!');
+    if (filenames[2] === 'del') {
+      delSrc();
+      console.info('Копирование, сортировка файлов и удаление исходной папки завершено!');
+    } else {
+      console.info('Копирование и сортировка файлов завершена!');
+    }
   }
 });
 
@@ -31,6 +38,7 @@ const readDir = (src) => {
   files.forEach(item => {
     let localBase = path.join(src, item);
     let state = fs.statSync(localBase);
+    // console.log(localBase);
 
     if (state.isDirectory()) {
       // console.log('folder ' + item);
@@ -60,7 +68,7 @@ const createFolder = (file, srcPath) => {
 
 const copyFile = (file, destPath, srcPath) => {
   // если файл с таким именем есть то добавляет -new к названию
-  // не работает если файлов с одинаковым именем больше двух
+  // не работает если файлов с одинаковым именем больше двух...
   if (fs.existsSync(path.join(destPath, file))) {
     const nameFile = file.split('.');
     const newFile = [nameFile[0] + '-new', nameFile[1]].join('.');
@@ -80,4 +88,13 @@ const copyFile = (file, destPath, srcPath) => {
       }
     });
   }
+};
+
+const delSrc = () => {
+  rimraf(src, err => {
+    if (err) {
+      console.error('удаление не прошло: ' + err.message);
+      throw err;
+    }
+  });
 };
