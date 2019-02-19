@@ -1,6 +1,6 @@
 # Loftschool Nodejs Homework 2.1
 
-##Сервер запкскается: 
+## Сервер запускается: 
 
 ```
 INTERVAL=[количество ms] TIMEOUT=[количество ms] node index
