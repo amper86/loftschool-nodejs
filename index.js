@@ -5,11 +5,33 @@
 
 const fs = require('fs');
 const path = require('path');
-var rimraf = require('rimraf');
+const rimraf = require('rimraf');
 
 const filenames = process.argv.slice(2);
 const src = path.join(__dirname, filenames[0]);
 const to = path.join(__dirname, filenames[1]);
+
+const readDirPromise = (src) => {
+  return new Promise((resolve, reject) => {
+    fs.readdir(src, (err, files) => {
+      if (err) {
+        reject(new Error('ошибка в readDirPromise'));
+      }
+      resolve(files);
+    });
+  });
+};
+
+const statPromise = (localBase) => {
+  return new Promise((resolve, reject) => {
+    fs.stat(localBase, (err, stats) => {
+      if (err) {
+        reject(new Error('Ошибка в statPromise'));
+      }
+      resolve(stats);
+    });
+  });
+};
 
 /* console.log('получаем аргументы из командной строки: ' + filenames);
 console.log('берем из: ' + src);
@@ -31,16 +53,16 @@ fs.mkdir(to, { recursive: true }, err => {
   }
 });
 
-const readDir = (src) => {
-  const files = fs.readdirSync(src);
+async function readDir (src) {
+  const files = await readDirPromise(src);
   // console.log(files);
 
-  files.forEach(item => {
+  files.forEach(async function (item) {
     let localBase = path.join(src, item);
-    let state = fs.statSync(localBase);
+    let stats = await statPromise(localBase);
     // console.log(localBase);
 
-    if (state.isDirectory()) {
+    if (stats.isDirectory()) {
       // console.log('folder ' + item);
       readDir(localBase);
     } else {
@@ -48,13 +70,17 @@ const readDir = (src) => {
       createFolder(item, localBase);
     }
   });
-};
+}
 
 const createFolder = (file, srcPath) => {
   const capitalLetter = file[0].toUpperCase();
   const currentPath = path.join(to, capitalLetter);
 
+  // console.log(fs.stat(currentPath));
+  console.log(currentPath);
+
   if (!fs.existsSync(currentPath)) {
+  // if (!fs.stat(currentPath)) {
     fs.mkdir(currentPath, { recursive: true }, err => {
       if (err) {
         console.error('папка с нужной буквой не создалась!');
