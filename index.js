@@ -77,17 +77,27 @@ const createFolder = (file, srcPath) => {
   const currentPath = path.join(to, capitalLetter);
 
   // console.log(fs.stat(currentPath));
-  console.log(currentPath);
+  // console.log(currentPath);
 
-  if (!fs.existsSync(currentPath)) {
-  // if (!fs.stat(currentPath)) {
+  /* if (!fs.existsSync(currentPath)) {
     fs.mkdir(currentPath, { recursive: true }, err => {
       if (err) {
         console.error('папка с нужной буквой не создалась!');
         throw err;
       }
     });
-  }
+  } */
+
+  fs.access(currentPath, err => {
+    if (err) {
+      fs.mkdir(currentPath, { recursive: true }, err => {
+        if (err) {
+          console.error('папка с нужной буквой не создалась!');
+          throw err;
+        }
+      });
+    }
+  });
 
   copyFile(file, currentPath, srcPath);
 };
@@ -95,7 +105,7 @@ const createFolder = (file, srcPath) => {
 const copyFile = (file, destPath, srcPath) => {
   // если файл с таким именем есть то добавляет -new к названию
   // не работает если файлов с одинаковым именем больше двух...
-  if (fs.existsSync(path.join(destPath, file))) {
+  /* if (fs.existsSync(path.join(destPath, file))) {
     const nameFile = file.split('.');
     const newFile = [nameFile[0] + '-new', nameFile[1]].join('.');
     const dest = path.join(destPath, newFile);
@@ -113,7 +123,29 @@ const copyFile = (file, destPath, srcPath) => {
         throw err;
       }
     });
-  }
+  } */
+
+  fs.access(path.join(destPath, file), (err) => {
+    if (err) {
+      fs.copyFile(srcPath, path.join(destPath, file), (err) => {
+        if (err) {
+          console.error('во время копирования что то пошло не так(');
+          throw err;
+        }
+      });
+    } else {
+      const nameFile = file.split('.');
+      const newFile = [nameFile[0] + '-new', nameFile[1]].join('.');
+      const dest = path.join(destPath, newFile);
+
+      fs.copyFile(srcPath, dest, (err) => {
+        if (err) {
+          console.error('во время копирования что то пошло не так(');
+          throw err;
+        }
+      });
+    }
+  });
 };
 
 const delSrc = () => {
